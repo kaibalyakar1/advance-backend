@@ -1,14 +1,17 @@
 import { app } from "./src/app.js";
 import connectDb from "./src/db/index.js";
-
+import dotenv from "dotenv";
 import express from "express";
 
 const PRT = process.env.PORT || 8000;
+dotenv.config({
+  path: "./.env",
+});
 
 connectDb()
   .then(() => {
     app.listen(PRT, () => {
-      console.log(`server is running on port ${PRT}`);
+      console.log(`server is running on poort ${PRT}`);
     });
   })
   .catch((err) => {

@@ -1,22 +1,23 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-const userSchema = new mongoose.Schema(
+
+const userSchema = new Schema(
   {
-    userName: {
+    username: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
       trim: true,
       index: true,
-      lowercase: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
+      lowecase: true,
       trim: true,
-      lowercase: true,
     },
     fullName: {
       type: String,
@@ -24,13 +25,13 @@ const userSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
-    avatar: {
-      required: true,
-      type: String,
-    },
-    coverImage: {
-      type: String,
-    },
+    // avatar: {
+    //   type: String, // cloudinary url
+    //   required: true,
+    // },
+    // coverImage: {
+    //   type: String, // cloudinary url
+    // },
     watchHistory: [
       {
         type: Schema.Types.ObjectId,
@@ -39,19 +40,21 @@ const userSchema = new mongoose.Schema(
     ],
     password: {
       type: String,
-      required: [true, "Please add a password"],
+      required: [true, "Password is required"],
     },
     refreshToken: {
       type: String,
     },
   },
-  { timestamps: true }
-);
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
+  {
+    timestamps: true,
   }
-  this.password = bcrypt.hash(this.password, 10);
+);
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
@@ -63,13 +66,13 @@ userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this._id,
-      userName: this.userName,
-      fullName: this.fullName,
       email: this.email,
+      username: this.username,
+      fullName: this.fullName,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACESS_TOKEN_EXPIRY,
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
     }
   );
 };
@@ -84,4 +87,5 @@ userSchema.methods.generateRefreshToken = function () {
     }
   );
 };
+
 export const User = mongoose.model("User", userSchema);
